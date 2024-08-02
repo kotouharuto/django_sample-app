@@ -1,6 +1,14 @@
 from django.db import models
 
 # Create your models here.
+class Post(models.Model):
+ category = models.CharField('category', max_length=15)
+ budget = models.IntegerField('budget')
+ def __str__(self):
+  return self.category
+ def __int__(self):
+  return self.budget
+
 class Ikea(models.Model):
  item_id = models.IntegerField('item_id')
  name = models.CharField('name', max_length=100)

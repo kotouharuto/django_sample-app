@@ -16,7 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from sample_app.views import recommend_form
 
+app_name = 'sample_app'
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('post/', recommend_form, name='recommend_form'),
 ]
