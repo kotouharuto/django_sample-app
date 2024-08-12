@@ -1,4 +1,3 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -6,27 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IKEA Best Fit</title>
     <style>
-        /* ローディング画面のスタイル */
-        #loading {
-            display: none;
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(255, 255, 255, 0.8);
-            z-index: 1000;
-            text-align: center;
-            line-height: 100vh;
-        }
-
-        #loading img {
-            width: 100px;
-            height: 100px;
-        }
-
         body {
             font-family: Arial, sans-serif;
             background-color: #f0f0f0;
@@ -85,8 +63,6 @@
             text-decoration: none; /* 下線を消す */
             transition: background-color 0.3s ease, box-shadow 0.3s ease;
             cursor: pointer;
-            position: relative;
-            top: 45%;
         }
 
         /* ホバー時のスタイル */
@@ -101,13 +77,6 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* 影を少し戻す */
         }
 
-        /* 更新ボタン */
-        .update-botton {
-            font-size: 20px;
-            text-align: right;
-            text-decoration: none;  /* 下線を削除 */
-            color: inherit;         /* 親要素の色を継承 */
-        }
 
         @media (max-width: 600px) {
             .grid-container {
@@ -115,46 +84,19 @@
             }
         }
     </style>
-    <script>
-        function submitLink(link) {
-            console.log("Submitting link:", link);
-            const form = document.createElement('form');
-            form.method = 'GET';
-            form.action = "{% url 'recommend' %}";
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'link';
-            input.value = link;
-            form.appendChild(input);
-            document.body.appendChild(form);
-            form.submit();
-        }
-    </script>
 </head>
 <body>
-    <!-- ローディング画面 -->
-    <div id="loading">
-        <img src="{% static 'three-11928_512.gif' %}" alt="Loading...">
-    </div>
-    <h1>Random product picks</h1>
-    <a href="{% url 'recommend_form' %}", class="update-botton">⎋</a>
-    <p>商品画像をクリックしてください</p>
-
+    <h1>Recommend for you</h1>
+    <p>画像をクリックすれば商品ページにジャンプできます</p>
     <div class="grid-container">
         {% for image in product_images %}
-            <div class="grid-item" onclick="submitLink('{{ image.link }}')">
-                <a href="{}"></a>
-                <img src="{{ image.image_url }}" alt="Product Image", id="recommendLink", target="_blank">
+            <div class="grid-item">
+              <a href="{{image.link}}">
+                <img src="{{ image.image_url }}" alt="Product Image">
+              </a>
             </div>
         {% endfor %}
     </div>
-
     <a href="{% url 'home' %}", class="pinterest-button">ホーム画面へ戻る</a>
-    <script>
-        // aタグのリンククリック時にローディングGIFを表示
-        document.getElementById('recommendLink').addEventListener('click', function(event) {
-            document.getElementById('loading').style.display = 'block';
-        });
-    </script>
 </body>
 </html>
