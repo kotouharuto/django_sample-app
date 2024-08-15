@@ -1,27 +1,20 @@
-# ライブラリ等のインポート
+"""
+ライブラリ等のインポート
+"""
 from django.shortcuts import render
 import numpy as np
 import pandas as pd
-import os
-import seaborn as sns
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-from scipy.sparse import hstack
 import warnings
 warnings.filterwarnings('ignore')
-from sample_app.admin import IkeaResource
-from sample_app.admin import IkeaAdmin
-from sample_app.models import Post, Ikea
-from django.shortcuts import render, get_object_or_404, redirect
-import requests
-from django.forms import ModelForm
-from django.http import HttpResponse
+from sample_app.models import Ikea
+from django.shortcuts import render
 import requests
 from bs4 import BeautifulSoup
 import random
-from IPython.display import Image, display
-from django.db.models import Count
 
+"""
+レコメンド用の画像やリンクを取得する関数
+"""
 def recommend_form(request):
   # データベースからすべてのリンクを取得
     all_products = list(Ikea.objects.all())
@@ -55,6 +48,9 @@ def recommend_form(request):
     context = {'product_images': product_images}
     return render(request, 'sample_app/recommend_form.html', context)
 
+"""
+ユーザーが選択した商品をもとにレコメンドシステムを実装する関数
+"""
 def recommend(request):
     """必要ライブラリのインポート"""
     from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
@@ -80,6 +76,7 @@ def recommend(request):
 
     soup = BeautifulSoup(response.content, 'html.parser')
     identifier = soup.find('span', class_='pip-product-identifier__value')
+    # item_idをレコメンド用に整備
     if identifier:
         identifier_value = identifier.text.strip().replace('.', '')
         if identifier_value[0] == '0':
@@ -90,6 +87,7 @@ def recommend(request):
     else:
         return render(request, 'sample_app/error.html', {'message': '商品識別子が見つかりませんでした。'})
 
+    # adminからデータを取得
     data = Ikea.objects.all().values('item_id', 'name', 'category', 'link', 'short_description')
     df = pd.DataFrame(list(data))
 
@@ -115,16 +113,25 @@ def recommend(request):
 
     combined_similarity_matrix = cosine_similarity(combined_matrix)
 
+    # 類似度スコアをもとにレコメンド実装
     def get_related_products(product_id, num_products=25):
         if product_id not in df.index:
             print(f'{product_id}がリストに存在しません。')
             return None
         idx = df.index.get_loc(product_id)
-        sim_scores = list(enumerate(combined_similarity_matrix[idx]))
-        sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-        print(sim_scores)
-        print(type(sim_scores))
-        sim_indices = [i[0] for i in sim_scores[1:num_products+1]]
+
+        # 類似度スコアが有効な範囲内にあるか確認し、インデックスを取得
+        sim_scores = combined_similarity_matrix[idx].flatten()
+        valid_indices = np.where((sim_scores > 0) & (sim_scores < np.inf))[0]
+        
+        # スコアを降順にソート
+        sorted_indices = valid_indices[np.argsort(sim_scores[valid_indices])[::-1]]
+        
+        # ソートされたインデックスから上位の製品を取得
+        sim_indices = sorted_indices[1:num_products + 1]  # 自分自身を除外して取得
+        
+        # インデックスが範囲外にならないようにチェック
+        sim_indices = [i for i in sim_indices if i < len(df)]
 
         return df.iloc[sim_indices][['category', 'name', 'short_description', 'link']].to_dict(orient='records')
 
@@ -133,6 +140,7 @@ def recommend(request):
     if related_products is None:
         return render(request, 'sample_app/error.html', {'message': '関連商品が見つかりませんでした。'})
 
+    # templatesに渡す用の辞書型リストを用意
     related_products_images = []
     for product in related_products:
         url = product['link']
@@ -159,6 +167,6 @@ def recommend(request):
     context = {'product_images': related_products_images}  # ここを修正
     return render(request, 'sample_app/recommend.html', context)
 
-
+"""home.html表示用関数"""
 def home(request):
     return render(request, 'sample_app/home.html')
