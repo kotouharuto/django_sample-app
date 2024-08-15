@@ -6,12 +6,11 @@
 
 ## 使用言語
 - Python3
-- Django
+- Django(フレームワーク)
 
 ## 環境
 - VScode
 - GitHub
-- Sourcetree
 
 ## 開発期間
 - 2週間~1ヶ月程度
